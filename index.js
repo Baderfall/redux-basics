@@ -39,42 +39,74 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
       return action.filter;
     default:
       return state;
-  }  
+  }
 };
 
 /* Reducers composition */
 
-const todoApp = (state = {}, action) => {
-  return {
-    todos: todos(state.todos, action),
-    visibilityFilter: visibilityFilter(state.visibilityFilter, action)
-  };
-};
+const todoApp = Redux.combineReducers({ todos, visibilityFilter })
 
 var store = Redux.createStore(todoApp);
 
+let nextTodoId = 0;
+class TodoApp extends Component {
+  render() {
+    return (
+      <div>
+        <button
+          onClick={() => {
+            store.dispatch({
+              type: 'ADD_TODO'
+              id: nextTodoId++,
+              text: 'Test text'
+            });
+          }}
+        >
+        Add todo
+        </button>
+        <ul>
+          {this.props.todo.map(todo =>
+            <li key={todo.id}>
+              {{ todo.text | todo.id }}
+            </li>
+          )}
+        </ul>
+    )
+  }
+}
+
+const render = () => {
+  ReactDOM.render(
+    <TodoApp todos={store.getState().todos} />,
+    document.getElementById('root');
+  )
+}
+
+store.subscribe(render);
+render();
+
 /* Tests */
 
-console.log(store.getState());
+// console.log(store.getState());
 
-store.dispatch({
-  type: 'ADD_TODO',
-  id: 0,
-  text: 'Learn redux'
-});
+// store.dispatch({
+//   type: 'ADD_TODO',
+//   id: 0,
+//   text: 'Learn redux'
+// });
 
-console.log(store.getState());
+// console.log(store.getState());
 
-store.dispatch({
-  type: 'TOGGLE_TODO',
-  id: 0
-});
+// store.dispatch({
+//   type: 'TOGGLE_TODO',
+//   id: 0
+// });
 
-console.log(store.getState());
+// console.log(store.getState());
 
-store.dispatch({
-  type: 'SET_VISIBILITY_FILTER',
-  filter: 'SHOW_COMPLETED'
-});
+// store.dispatch({
+//   type: 'SET_VISIBILITY_FILTER',
+//   filter: 'SHOW_COMPLETED'
+// });
 
-console.log(store.getState());
+// console.log(store.getState());
