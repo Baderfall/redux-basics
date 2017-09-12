@@ -9,13 +9,13 @@ const todo = (state, action) => {
         return Object.assign({}, state, {completed: !state.completed});
       } else {
         return state;
-      };
+      }
     default:
       return state;
   }
 };
 
-/* Todos arr reducer */
+/* Todo arr reducer */
 
 const todos = (state = [], action) => {
   switch (action.type) {
@@ -31,7 +31,27 @@ const todos = (state = [], action) => {
   }
 };
 
-var store = Redux.createStore(todos);
+/* Visibility filter reducer */
+
+const visibilityFilter = (state = 'SHOW_ALL', action) => {
+  switch(action.type) {
+    case 'SET_VISIBILITY_FILTER':
+      return action.filter;
+    default:
+      return state;
+  }  
+};
+
+/* Reducers composition */
+
+const todoApp = (state = {}, action) => {
+  return {
+    todos: todos(state.todos, action),
+    visibilityFilter: visibilityFilter(state.visibilityFilter, action)
+  };
+};
+
+var store = Redux.createStore(todoApp);
 
 /* Tests */
 
@@ -48,6 +68,13 @@ console.log(store.getState());
 store.dispatch({
   type: 'TOGGLE_TODO',
   id: 0
+});
+
+console.log(store.getState());
+
+store.dispatch({
+  type: 'SET_VISIBILITY_FILTER',
+  filter: 'SHOW_COMPLETED'
 });
 
 console.log(store.getState());
