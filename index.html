@@ -1,14 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Document</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react-dom.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.1/react-with-addons.min.js"></script>
-</head>
-<body>
-  <div id="root"></div>
-  <script src="./index.js"></script>
-</body>
+  <head>
+    <title>My First React Example</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+    <script src="https://fb.me/react-15.0.0.js"></script>
+    <script src="https://fb.me/react-dom-15.0.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script type="text/babel">
+      /* Single todo reducer */
+
+      const todo = (state, action) => {
+        switch (action.type) {
+          case 'ADD_TODO':
+            return {id: action.id, text: action.text, completed: false};
+          case 'TOGGLE_TODO':
+            if(state.id === action.id) {
+              return Object.assign({}, state, {completed: !state.completed});
+            } else {
+              return state;
+            }
+          default:
+            return state;
+        }
+      };
+
+      /* Todo arr reducer */
+
+      const todos = (state = [], action) => {
+        switch (action.type) {
+          case 'ADD_TODO':
+            return [
+              ...state,
+              todo(undefined, action)
+            ];
+          case 'TOGGLE_TODO':
+            return state.map(t => todo(t, action));
+          default:
+            return state;
+        }
+      };
+
+      /* Visibility filter reducer */
+
+      const visibilityFilter = (state = 'SHOW_ALL', action) => {
+        switch(action.type) {
+          case 'SET_VISIBILITY_FILTER':
+            return action.filter;
+          default:
+            return state;
+        }
+      };
+
+      /* Reducers composition */
+
+      const todoApp = Redux.combineReducers({ todos, visibilityFilter });
+
+      var store = Redux.createStore(todoApp);
+
+      let nextTodoId = 0;
+      class TodoApp extends React.Component {
+        render() {
+          return (
+            <div>
+              <button
+                onClick={() => {
+                  store.dispatch({
+                    type: 'ADD_TODO',
+                    id: nextTodoId++,
+                    text: 'Test text'
+                  });
+                }}
+              >
+              Add todo
+              </button>
+              <ul>
+                {this.props.todos.map(todo =>
+                  <li key={todo.id}>
+                    { todo.text }
+                  </li>
+                )}
+              </ul>
+            </div>
+          )
+        }
+      }
+
+      const render = () => {
+        ReactDOM.render(
+          <TodoApp todos={store.getState().todos} />,
+          document.getElementById('root')
+        )
+      }
+
+      store.subscribe(render);
+      render();
+    </script>
+  </body>
 </html>
