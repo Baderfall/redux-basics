@@ -87,6 +87,30 @@
           >{children}</a>
         );
       }
+
+      const Todo = ({ text, completed, onClick }) => {
+        return (
+          <li
+            onClick={onClick}
+            style={{textDecoration: completed ? 'line-through' : 'none'}}
+          >{text}</li>
+        );
+      }
+
+      const Todos = ({ todos, todoOnClick }) => {
+        return (
+          <ul>
+            {todos.map(todo =>
+              <Todo
+                {...todo}
+                key={todo.id}
+                onClick={ () => {todoOnClick(todo.id)} }
+              />
+            )}
+         </ul>
+        );
+      }
+
       class TodoApp extends React.Component {
         // Why TodoApp knows about todos & visibilityFilter?
         render() {
@@ -108,23 +132,15 @@
               >
               Add todo
               </button>
-              <ul>
-                {visibleTodos.map(todo =>
-                  <li key={todo.id}
-                      onClick={() => {
-                        store.dispatch({
-                          type: 'TOGGLE_TODO',
-                          id: todo.id
-                        })
-                      }}
-                      style={{
-                        textDecoration: todo.completed ? 'line-through' : 'none'
-                      }}
-                  >
-                    { todo.text }
-                  </li>
-                )}
-              </ul>
+              <Todos 
+                todos={visibleTodos} 
+                todoOnClick={(id) => {
+                    store.dispatch({
+                      type: 'TOGGLE_TODO',
+                      id
+                    });
+                  }}
+                />
               <p>
                 Show:{' '}
                 <FilterLink filter='SHOW_ALL'>All</FilterLink>{' '}
