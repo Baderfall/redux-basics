@@ -1,3 +1,3 @@
 ## redux-basics
 
-https://jsbin.com/caxomalaso/edit?html,js,console
+https://jsbin.com/merubudeti/edit?html,js,output
