@@ -58,7 +58,6 @@
       /* Reducers composition */
 
       const todoApp = Redux.combineReducers({ todos, visibilityFilter });
-      var store = Redux.createStore(todoApp);
 
       let nextTodoId = 0;
 
@@ -73,8 +72,8 @@
         }
       }
 
-      /* Mixed component */
-      const AddTodo = () => {
+      /* Mixed component. Second argument is a context */
+      const AddTodo = (props, { store }) => {
         let input;
         return (
           <div>
@@ -91,11 +90,15 @@
             }}>Add todo</button>
           </div>
         );
-      }
+      };
+      AddTodo.contextTypes = {
+        store: React.PropTypes.object
+      };
 
       /* Container component */
       class VisibleTodos extends React.Component {
         componentDidMount() {
+          const { store } = this.context;
           this.unsubscribe = store.subscribe(() => {
             this.forceUpdate();
           });
@@ -106,6 +109,7 @@
         }
 
         render() {
+          const { store } = this.context;
           const state = store.getState();
 
           return (
@@ -121,6 +125,10 @@
           );
         }
       }
+
+      VisibleTodoList.contextTypes = {
+        store: React.PropTypes.object
+      };
       
       /* Presentational component */
       const Todos = ({todos, onTodoClick}) => (
@@ -140,18 +148,19 @@
       );
 
       /* Presentational component */
-      const Filters = () => (
+      const Filters = ({ store }) => (
         <p>
           Show:{' '}
-          <FilterLink filter='SHOW_ALL'>All</FilterLink>{' '}
-          <FilterLink filter='SHOW_ACTIVE'>Active</FilterLink>{' '}
-          <FilterLink filter='SHOW_COMPLETED'>Completed</FilterLink>
+          <FilterLink store={store} filter='SHOW_ALL'>All</FilterLink>{' '}
+          <FilterLink store={store} filter='SHOW_ACTIVE'>Active</FilterLink>{' '}
+          <FilterLink store={store} filter='SHOW_COMPLETED'>Completed</FilterLink>
         </p>
       );
 
       /* Container component */
       class FilterLink extends React.Component {
         componentDidMount() {
+          const { store } = this.props;
           this.unsubscribe = store.subscribe(() => {
             this.forceUpdate();
           });
@@ -162,6 +171,7 @@
         }
 
         render() {
+          const { store } = this.props;
           const state = store.getState();
           const props = this.props;
           return(
@@ -194,16 +204,16 @@
         }
       };
 
-      const TodoApp = () => (
+      const TodoApp = ({store}) => (
         <div>
-          <AddTodo />
-          <VisibleTodos />
-          <Filters />
+          <AddTodo store={store} />
+          <VisibleTodos store={store} />
+          <Filters store={store} />
         </div>
       );
 
       ReactDOM.render(
-        <TodoApp {...store.getState()} />,
+        <TodoApp store={Redux.createStore(todoApp)} />,
         document.getElementById('root')
       );
     </script>
