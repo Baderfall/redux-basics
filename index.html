@@ -7,9 +7,10 @@
     <div id="root"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
-    <script src="https://fb.me/react-15.0.0.js"></script>
-    <script src="https://fb.me/react-dom-15.0.0.js"></script>
+    <script src="https://fb.me/react-15.3.0.min.js"></script>
+    <script src="https://fb.me/react-dom-15.3.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
     <script type="text/babel">
       /* Single todo reducer */
 
@@ -61,6 +62,21 @@
 
       let nextTodoId = 0;
 
+      const addTodo = (text) => {
+        return {
+          type: 'ADD_TODO',
+          id: nextTodoId++,
+          text
+        }
+      }
+
+      const setVisibilityFilter = (filter) => {
+        return {
+          type: 'SET_VISIBILITY_FILTER',
+          filter
+        }
+      }
+
       const getVisibleTodos = (todos, filter) => {
         switch(filter) {
           case 'SHOW_ALL':
@@ -73,7 +89,7 @@
       }
 
       /* Mixed component. Second argument is a context */
-      const AddTodo = (props, { store }) => {
+      let AddTodo = ({ dispatch }) => {
         let input;
         return (
           <div>
@@ -81,54 +97,14 @@
               input = e;
             }} />
             <button onClick={() => {
-              store.dispatch({
-                type: 'ADD_TODO',
-                id: nextTodoId++,
-                text: input.value
-              });
+              dispatch(addTodo(input.value));
               input.value = ''
             }}>Add todo</button>
           </div>
         );
       };
-      AddTodo.contextTypes = {
-        store: React.PropTypes.object
-      };
+      AddTodo = ReactRedux.connect()(AddTodo);
 
-      /* Container component */
-      class VisibleTodos extends React.Component {
-        componentDidMount() {
-          const { store } = this.context;
-          this.unsubscribe = store.subscribe(() => {
-            this.forceUpdate();
-          });
-        }
-
-        componentWillUnmount() {
-          this.unsubscribe();
-        }
-
-        render() {
-          const { store } = this.context;
-          const state = store.getState();
-
-          return (
-            <Todos
-              todos={getVisibleTodos(state.todos, state.visibilityFilter)}
-              onTodoClick={id => 
-                store.dispatch({
-                  type: 'TOGGLE_TODO',
-                  id
-                })
-              }
-            />
-          );
-        }
-      }
-      VisibleTodos.contextTypes = {
-        store: React.PropTypes.object
-      };
-      
       /* Presentational component */
       const Todos = ({todos, onTodoClick}) => (
         <ul>
@@ -137,6 +113,30 @@
           )}
         </ul>
       );
+
+      /* Container component */
+      const mapStateToTodosProps = (state) => {
+        return {
+          todos: getVisibleTodos(
+            state.todos,
+            state.visibilityFilter
+          )
+        };
+      };
+      const mapDispatchToTodosProps = (dispatch) => {
+        return {
+          onTodoClick: (id) => {
+            dispatch({
+              type: 'TOGGLE_TODO',
+              id
+            });
+          }
+        };
+      };
+      const VisibleTodos = ReactRedux.connect(
+        mapStateToTodosProps,
+        mapDispatchToTodosProps
+      )(Todos);
 
       /* Presentational component */
       const Todo = ({ text, completed, onClick }) => (
@@ -147,6 +147,7 @@
       );
 
       /* Presentational component */
+
       const Filters = () => (
         <p>
           Show:{' '}
@@ -155,40 +156,6 @@
           <FilterLink filter='SHOW_COMPLETED'>Completed</FilterLink>
         </p>
       );
-
-      /* Container component */
-      class FilterLink extends React.Component {
-        componentDidMount() {
-          const { store } = this.context;
-          this.unsubscribe = store.subscribe(() => {
-            this.forceUpdate();
-          });
-        }
-
-        componentWillUnmount() {
-          this.unsubscribe();
-        }
-
-        render() {
-          const { store } = this.context;
-          const state = store.getState();
-          const props = this.props;
-          return(
-            <Link
-              isActive={props.filter === state.visibilityFilter}
-              onClick={() => 
-                store.dispatch({
-                  type: 'SET_VISIBILITY_FILTER',
-                  filter: props.filter
-                })
-              }
-            >{props.children}</Link>
-          );
-        }
-      };
-      FilterLink.contextTypes = {
-        store: React.PropTypes.object
-      }
 
       /* Presentational component */
       const Link = ({onClick, children, isActive}) => {
@@ -206,6 +173,23 @@
         }
       };
 
+      const mapStateToLinkProps = (state, ownProps) => {
+        return {
+          isActive: ownProps.filter === state.visibilityFilter
+        };
+      };
+      const mapDispatchToLinkProps = (dispatch, ownProps) => {
+        return {
+          onClick: () => {
+            dispatch(setVisibilityFilter(ownProps.filter));
+          }
+        };
+      };
+      const FilterLink = ReactRedux.connect(
+        mapStateToLinkProps,
+        mapDispatchToLinkProps
+      )(Link);
+
       const TodoApp = () => (
         <div>
           <AddTodo />
@@ -214,20 +198,7 @@
         </div>
       );
 
-      class Provider extends React.Component {
-        getChildContext() {
-          return {
-            store: this.props.store
-          };
-        }
-
-        render () {
-          return this.props.children;
-        }
-      }
-      Provider.childContextTypes = {
-        store: React.PropTypes.object
-      };
+      const { Provider } = ReactRedux;
 
       ReactDOM.render(
         <Provider store={Redux.createStore(todoApp)}>
