@@ -125,8 +125,7 @@
           );
         }
       }
-
-      VisibleTodoList.contextTypes = {
+      VisibleTodos.contextTypes = {
         store: React.PropTypes.object
       };
       
@@ -148,19 +147,19 @@
       );
 
       /* Presentational component */
-      const Filters = ({ store }) => (
+      const Filters = () => (
         <p>
           Show:{' '}
-          <FilterLink store={store} filter='SHOW_ALL'>All</FilterLink>{' '}
-          <FilterLink store={store} filter='SHOW_ACTIVE'>Active</FilterLink>{' '}
-          <FilterLink store={store} filter='SHOW_COMPLETED'>Completed</FilterLink>
+          <FilterLink filter='SHOW_ALL'>All</FilterLink>{' '}
+          <FilterLink filter='SHOW_ACTIVE'>Active</FilterLink>{' '}
+          <FilterLink filter='SHOW_COMPLETED'>Completed</FilterLink>
         </p>
       );
 
       /* Container component */
       class FilterLink extends React.Component {
         componentDidMount() {
-          const { store } = this.props;
+          const { store } = this.context;
           this.unsubscribe = store.subscribe(() => {
             this.forceUpdate();
           });
@@ -171,7 +170,7 @@
         }
 
         render() {
-          const { store } = this.props;
+          const { store } = this.context;
           const state = store.getState();
           const props = this.props;
           return(
@@ -187,6 +186,9 @@
           );
         }
       };
+      FilterLink.contextTypes = {
+        store: React.PropTypes.object
+      }
 
       /* Presentational component */
       const Link = ({onClick, children, isActive}) => {
@@ -204,16 +206,33 @@
         }
       };
 
-      const TodoApp = ({store}) => (
+      const TodoApp = () => (
         <div>
-          <AddTodo store={store} />
-          <VisibleTodos store={store} />
-          <Filters store={store} />
+          <AddTodo />
+          <VisibleTodos />
+          <Filters />
         </div>
       );
 
+      class Provider extends React.Component {
+        getChildContext() {
+          return {
+            store: this.props.store
+          };
+        }
+
+        render () {
+          return this.props.children;
+        }
+      }
+      Provider.childContextTypes = {
+        store: React.PropTypes.object
+      };
+
       ReactDOM.render(
-        <TodoApp store={Redux.createStore(todoApp)} />,
+        <Provider store={Redux.createStore(todoApp)}>
+          <TodoApp />
+        </Provider>,
         document.getElementById('root')
       );
     </script>
